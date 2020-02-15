@@ -1,3 +1,5 @@
+# custom_types.nim
+
 type SCSError* = object of Exception
 
 type Place* = ref object
@@ -6,19 +8,6 @@ type Place* = ref object
 
 proc addPlace* (p1: Place, p2: Place): Place =
   Place(row: p1.row+p2.row, col: p1.col+p2.col)
-
-type SCSFieldInput* = object
-  row*: int
-  col*: int
-  data*: seq[int]
-
-type SCSFriendInput* = object
-  name*: string
-  lv*: int
-  doubleSpeed*: bool
-  hpDope*, atkDope*: int
-  weakenAtk*, weakenDef*: int
-  isSealed*, isSticked*: bool
 
 type
   Hoimin = ref object    # ホイミスライム
@@ -30,17 +19,6 @@ type
     attack*: float         # 通常攻撃があたる確率
     divide*: float         # スモールグールの分裂確率
     hoimin*: Hoimin
-
-type SCSConfigInput* = object
-  turn*: int
-  trial*: int
-  pConf*: ProbabilityConfig
-
-type SCSInput* = object
-  friends: seq[SCSFriendInput]
-  field: SCSFieldInput
-  config: SCSConfigInput
-
 
 proc defaultProbabilityConfig* (): ProbabilityConfig =
   ProbabilityConfig(

@@ -62,6 +62,6 @@
     },
     "config": {
         "turn": 1500,
-        "trial": 100,
+        "trial": 10,
     }
 }

@@ -1,14 +1,19 @@
 # This is just an example to get you started. A typical hybrid package
 # uses this file as the main entry point of the application.
 
-import json
-import marshal
+import os
+import scspkg/manager, scspkg/cli
 
-import scspkg/custom_types
-import scspkg/manager
+proc main(fname: string) =
+  let jsonStr = readFile(fname)
+  let m = newManager(jsonStr)
+  m.runAllTrialCli()
 
 when isMainModule:
-  let jsonStr = readFile("inputs/sample.json")
-  let m = newManager(jsonStr)
+  if paramCount() == 1:
+    let argv = commandLineParams()
+    main(argv[0])
+  else:
+    echo "Usage: "
+    echo "$ scs [json input file]"
 
-  m.runAllTrial()

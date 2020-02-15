@@ -1,6 +1,4 @@
 # status.nim
-#
-
 import custom_types
 
 type GrowType {.pure.} = enum
@@ -482,7 +480,6 @@ proc getBasicMonsterStatus* (name: string, lv: int): BasicMonsterStatus =
   bms.def0 += getDEFGrow(bms.growType, lv)
 
   return bms
-
 
 proc getLvByDexp* (name: string, startLv: int, dexp: int): int =
   let bms0 = getBasicMonsterStatus(name, startLv)

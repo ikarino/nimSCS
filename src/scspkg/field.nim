@@ -1,9 +1,8 @@
 # field.nim
 import json, sequtils, sugar
-
 import custom_types
 
-type SCSField* = ref object of RootObj
+type SCSField* = ref object
   row*: int
   col*: int
   data*: seq[seq[int]]
@@ -26,8 +25,10 @@ proc newField*(inp: JsonNode): SCSField =
 proc setField*(f: SCSField, p: Place, num: int) =
   f.data[p.row][p.col] = num
 
+
 proc getField*(f: SCSField, p: Place): int =
   return f.data[p.row][p.col]
+
 
 proc show* (f: SCSField): string =
   result = ""
@@ -42,6 +43,7 @@ proc show* (f: SCSField): string =
         else: result.add(unit)
     result.add("\n")
 
+
 proc findFriend*(f: SCSField, num: int): Place =
   for row in countup(0, f.row-1):
     for col in countup(0, f.col-1):
@@ -49,11 +51,13 @@ proc findFriend*(f: SCSField, num: int): Place =
         return Place(row: row, col: col)
   raise newException(SCSError, "friend not found")
 
+
 proc findEnemys*(f: SCSField): seq[Place] =
   for row in countup(0, f.row-1):
     for col in countup(0, f.col-1):
       if f.data[row][col] == 9:
         result.add(Place(row: row, col: col))
+
 
 proc findTargets*(f: SCSField, place: Place, includeCorner: bool=false): seq[int] =
   let myNumber = f.getField(place)
@@ -85,6 +89,7 @@ proc findTargets*(f: SCSField, place: Place, includeCorner: bool=false): seq[int
 
       if not isCorner or includeCorner:
         result.add(tNumber)
+
 
 proc findVacants*(f: SCSField, place: Place, includeCorner: bool=false): seq[Place] =
   let rowMe = place.row

@@ -1,5 +1,4 @@
 # unit.nim
-
 import json, math, random
 import custom_types, status
 
@@ -21,7 +20,7 @@ type SCSUnit* = ref object of RootObj
 type Friend* = ref object of SCSUnit
   order*: int
   doubleSpeed*: bool
-  killCount: int
+  killCount*: int
   divisionLossCount*: int
   actionLossCount*: int
   isSticked*: bool
