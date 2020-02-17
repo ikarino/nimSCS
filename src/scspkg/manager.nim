@@ -1,34 +1,36 @@
 # manager.nim
-import json, random, sugar, sequtils
+import json, random, sugar, sequtils, system
 import custom_types, unit, field, mathFunctions
 
 type
   Config = object
-    turn: int
+    turn*: int
     trial*: int
     pConf: ProbabilityConfig
   Manager* = ref object
     j: JsonNode
     config*: Config
-    friends: seq[Friend]
-    enemys: seq[Enemy]
+    friends*: seq[Friend]
+    enemys*: seq[Enemy]
     field: SCSField
-    killCount: int
-    turnNow: int
+    killCount*: int
+    turnNow*: int
     trialOutputs: seq[JsonNode]
 
 ## forward declarations
-proc init(m: Manager)
+proc init* (m: Manager)
 proc trial*(m: Manager)
-proc turn(m: Manager)
+proc turn*(m: Manager)
 proc turnFriend(m: Manager)
 proc turnEnemy(m: Manager)
 proc actionFriend(m: Manager, f: Friend): bool
 proc divide(m: Manager, sumo: SCSUnit): bool
+proc getEnemyByNumber(m: Manager, num: int): Enemy
 
 ## ----------------------------------------------------------------------------
 ## constructors
 proc newManager* (jsonStr: string): Manager =
+  randomize()
   let j = parseJson(jsonStr)
 
   for topKey in ["friends", "field", "config"]:
@@ -116,7 +118,6 @@ proc summarizeOutput* (m: Manager): JsonNode =
 proc runAllTrial* (m: Manager): void =
   for trial in 1..m.config.trial:
     m.trial()
-  echo m.summarizeOutput()
 
 proc trial* (m: Manager): void =
   m.init()
@@ -130,7 +131,7 @@ proc trial* (m: Manager): void =
     m.turnNow += 1
   m.saveOutput()
 
-proc init(m: Manager) =
+proc init* (m: Manager) =
   # [field]
   let field = newField(m.j["field"])
 
@@ -140,15 +141,15 @@ proc init(m: Manager) =
   for f in m.j["friends"]:
     friends.add(newFriend(f, order, field.findFriend(order+10), m.config.pConf))
     order += 1
-  
+
   # [enemy]
   m.killCount = 0
   var enemys: seq[Enemy]
   for place in field.findEnemys():
-    enemys.add(newEnemy(m.killCount+20, place, m.config.pConf))
+    enemys.add(newEnemy(m.killCount, place, m.config.pConf))
     field.setField(place, m.killCount+20)
     m.killCount += 1
-  
+
   m.friends = friends
   m.enemys = enemys
   m.field = field
@@ -157,7 +158,7 @@ proc init(m: Manager) =
 proc turn(m: Manager): void =
   m.turnEnemy()
   m.turnFriend()
-  
+
 proc turnFriend(m: Manager): void =
   for speed in [true, false]:
     for friend in m.friends:
@@ -166,9 +167,10 @@ proc turnFriend(m: Manager): void =
         if not isActed:
           friend.actionLossCount += 1
         friend.naturalRecovery()
-  
+
 proc turnEnemy(m: Manager): void =
-  for enemy in m.enemys:
+  for num in m.enemys.map(e => e.num):
+    let enemy = m.getEnemyByNumber(num)
     # 1. 攻撃を試みる
     let targets = m.field.findTargets(enemy.place)
     if targets.len > 0:
@@ -180,8 +182,8 @@ proc turnEnemy(m: Manager): void =
       if friend.name == "スモールグール" and not friend.isSealed and wasHit:
         discard m.divide(m.friends[target-10])
       # 攻撃したら終了
-      continue 
-  
+      continue
+
     # 2. 移動を試みる
     let emptyPlaces = m.field.findVacants(enemy.place)
     if emptyPlaces.len > 0:
@@ -189,12 +191,14 @@ proc turnEnemy(m: Manager): void =
       m.field.setField(enemy.place, 0)
       m.field.setField(place, enemy.num+20)
       enemy.place = place
-    
+
+
+
 ## ----------------------------------------------------------------------------
 ## small utilities
 proc addEnemy(m: Manager, place: Place) =
   if rand(1.0) < m.config.pConf.divide:
-    m.enemys.add(newEnemy(m.killCount+20, place, m.config.pConf))
+    m.enemys.add(newEnemy(m.killCount, place, m.config.pConf))
     m.field.setField(place, m.killCount+20)
     m.killCount += 1
 
@@ -249,7 +253,7 @@ proc actionKillerMachine(m: Manager, f: Friend): bool =
   let targets = m.field.findTargets(f.place)
   if targets.len > 0:
     let target = targets[rand(targets.len-1)]
-    let enemy = m.getEnemyByNumber(target)
+    let enemy = m.getEnemyByNumber(target-20)
 
     let r = m.attack(f, enemy)     # 攻撃1回目
     if r == "killed": return true  # 一回目で倒したら終了
@@ -272,7 +276,7 @@ proc actionHoimiSlime(m: Manager, f: Friend): bool =
         if unit.chp < unit.mhp.float:
           hoimiTargets.add(unit)
       elif number >= 20:
-        let unit = m.getEnemyByNumber(number)
+        let unit = m.getEnemyByNumber(number-20)
         if unit.chp < unit.mhp.float:
           hoimiTargets.add(unit)
   returnValue = returnValue or hoimiTargets.len > 0
@@ -297,7 +301,7 @@ proc actionHoimiSlime(m: Manager, f: Friend): bool =
   # 4.
   for enemyId in attackTargets:
     if rand(1.0) < m.config.pConf.hoimin.attack:
-      let enemy = m.getEnemyByNumber(enemyId)
+      let enemy = m.getEnemyByNumber(enemyId-20)
       discard m.attack(f, enemy)
       return returnValue
 
@@ -316,7 +320,7 @@ proc actionNormal(m: Manager, f: Friend): bool =
   let targets = m.field.findTargets(f.place)
   if targets.len > 0:
     let target = targets[rand(targets.len-1)]
-    let enemy = m.getEnemyByNumber(target - 20)
+    let enemy = m.getEnemyByNumber(target-20)
     discard m.attack(f, enemy)
     return true
   return false
@@ -330,4 +334,3 @@ proc actionFriend(m: Manager, f: Friend): bool =
     return m.actionHoimiSlime(f)
   else:
     return m.actionNormal(f)
-
