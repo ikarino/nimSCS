@@ -1,6 +1,6 @@
 # field.nim
 import json, sequtils, sugar
-import custom_types
+import customTypes
 
 type SCSField* = ref object
   row*: int

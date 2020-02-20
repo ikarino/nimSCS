@@ -1,6 +1,6 @@
 # unit.nim
 import json, math, random
-import custom_types, status
+import customTypes, status
 
 type SCSUnit* = ref object of RootObj
   name*: string

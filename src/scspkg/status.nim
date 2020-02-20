@@ -1,5 +1,5 @@
 # status.nim
-import custom_types
+import customTypes
 
 type GrowType {.pure.} = enum
   FutsuSojuku

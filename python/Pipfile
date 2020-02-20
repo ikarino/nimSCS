@@ -7,6 +7,8 @@ verify_ssl = true
 
 [packages]
 deap = "*"
+numpy = "*"
+scoop = "*"
 
 [requires]
 python_version = "3.7"

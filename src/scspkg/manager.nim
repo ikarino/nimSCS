@@ -1,6 +1,6 @@
 # manager.nim
 import json, random, sugar, sequtils, system
-import custom_types, unit, field, mathFunctions
+import customTypes, unit, field, mathFunctions
 
 type
   Config = object
@@ -12,20 +12,20 @@ type
     config*: Config
     friends*: seq[Friend]
     enemys*: seq[Enemy]
-    field: SCSField
+    field*: SCSField
     killCount*: int
     turnNow*: int
-    trialOutputs: seq[JsonNode]
+    trialOutputs*: seq[JsonNode]
 
 ## forward declarations
 proc init* (m: Manager)
 proc trial*(m: Manager)
 proc turn*(m: Manager)
-proc turnFriend(m: Manager)
-proc turnEnemy(m: Manager)
-proc actionFriend(m: Manager, f: Friend): bool
-proc divide(m: Manager, sumo: SCSUnit): bool
-proc getEnemyByNumber(m: Manager, num: int): Enemy
+proc turnFriend*(m: Manager)
+proc turnEnemy*(m: Manager)
+proc actionFriend*(m: Manager, f: Friend): bool
+proc divide*(m: Manager, sumo: SCSUnit): bool
+proc getEnemyByNumber*(m: Manager, num: int): Enemy
 
 ## ----------------------------------------------------------------------------
 ## constructors
@@ -50,7 +50,7 @@ proc newManager* (jsonStr: string): Manager =
 
 ## ----------------------------------------------------------------------------
 ## outputs
-proc saveOutput(m: Manager) =
+proc saveOutput*(m: Manager) =
   var finishState = "success"
   if m.turnNow < m.config.turn:
     if m.enemys.len == 0:
@@ -159,7 +159,7 @@ proc turn(m: Manager): void =
   m.turnEnemy()
   m.turnFriend()
 
-proc turnFriend(m: Manager): void =
+proc turnFriend*(m: Manager): void =
   for speed in [true, false]:
     for friend in m.friends:
       if speed or friend.doubleSpeed:
@@ -168,7 +168,7 @@ proc turnFriend(m: Manager): void =
           friend.actionLossCount += 1
         friend.naturalRecovery()
 
-proc turnEnemy(m: Manager): void =
+proc turnEnemy*(m: Manager): void =
   for num in m.enemys.map(e => e.num):
     let enemy = m.getEnemyByNumber(num)
     # 1. 攻撃を試みる
@@ -206,7 +206,7 @@ proc removeEnemy(m: Manager, enemy: Enemy) =
   m.field.setField(enemy.place, 0)
   m.enemys = m.enemys.filter(e => e.num != enemy.num)
 
-proc divide(m: Manager, sumo: SCSUnit): bool =
+proc divide*(m: Manager, sumo: SCSUnit): bool =
   let dplaceList = [
       Place(row: -1, col: 0),  # 0: 上
       Place(row: -1, col: -1), # 1: 左上
@@ -229,7 +229,7 @@ proc divide(m: Manager, sumo: SCSUnit): bool =
       return true
   return false
 
-proc getEnemyByNumber(m: Manager, num: int): Enemy =
+proc getEnemyByNumber*(m: Manager, num: int): Enemy =
   return m.enemys.filter(e => e.num == num)[0]
 
 ## ----------------------------------------------------------------------------
@@ -325,7 +325,7 @@ proc actionNormal(m: Manager, f: Friend): bool =
     return true
   return false
 
-proc actionFriend(m: Manager, f: Friend): bool =
+proc actionFriend*(m: Manager, f: Friend): bool =
   if f.isSealed:
     return m.actionNormal(f)
   elif f.name == "キラーマシン" or f.name == "さそりかまきり":
